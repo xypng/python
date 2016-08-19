@@ -49,7 +49,7 @@ class QSBK(object):
 		try:
 			url = 'http://www.qiushibaike.com/article/%s' % storyId
 			request = urllib2.Request(url, headers=self.headers)
-			response = urllib2.urlopen(request)
+			response = urllib2.urlopen(request, timeout=5)
 			pageContent = response.read().decode('utf-8')
 			return pageContent
 		except urllib2.URLError, e:
