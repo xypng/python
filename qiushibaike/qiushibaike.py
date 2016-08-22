@@ -6,6 +6,7 @@ __author__ = 'xiaoyipeng'
 import urllib
 import urllib2
 import re
+import os.path
 
 htmlCharacterMap = {
 	'<br/>' : '\n',
@@ -36,7 +37,9 @@ class QSBK(object):
 		try:
 			url = 'http://www.qiushibaike.com/8hr/page/%d/' % pageIndex
 			request = urllib2.Request(url, headers=self.headers)
-			response = urllib2.urlopen(request)
+			print u'开始加载%02d页' % pageIndex
+			response = urllib2.urlopen(request, timeout=5)
+			print u'成功加载%02d页' % pageIndex
 			pageContent = response.read().decode('utf-8')
 			return pageContent
 		except urllib2.URLError, e:
@@ -60,7 +63,7 @@ class QSBK(object):
 	def getPageTotal(self, content):
 		"""得到总页数"""
 		if self.pagetotal != 9999:
-			print u'加载第%d页' % self.pageIndex
+			# print u'加载第%d页' % self.pageIndex
 			return
 		pattrenStr = '<span class="page-numbers">(?P<pagetotal>.*?)</span>'
 		pattern = re.compile(pattrenStr, re.S)
@@ -71,18 +74,17 @@ class QSBK(object):
 
 	def getPageItems(self, pageIndex):
 		pageContent = self.getPageContent(pageIndex)
+		with open('temp%02d.html' % pageIndex, 'w') as f:
+			f.write(pageContent.encode('utf-8'))
 		if not pageContent:
 			print "页面加载失败..."
 			return None
 		self.getPageTotal(pageContent)
-		pattrenStr = r'<div class="article block untagged mb15".*?">.*?'\
-						r'.*?<h2>(?P<authorname>.*?)</h2>.*?'\
+		pattrenStr = r'<h2>(?P<authorname>.*?)</h2>.*?'\
 						r'<div class="content">(?P<content>.*?)</div>'\
 						r'(?P<maybehaveimage>.*?)'\
 						r'<i class="number">(?P<numbervote>.*?)</i>.*?'\
-						r'<a href="/article/(?P<storyid>.*?)".*?'\
-						r'<i class="number">(?P<numbercomment>.*?)</i>.*?'\
-						r'</div>'
+						r'<span class="stats-comments">(?P<comments>.*?)</div>'
 		pattern = re.compile(pattrenStr, re.S)
 		items = re.findall(pattern, pageContent)
 		return items
@@ -124,16 +126,25 @@ class QSBK(object):
 			if re.search('img', item[2]):
 				continue
 			content = item[1].strip()
-			for (k,v) in htmlCharacterMap.items():
 			#转换html的特殊字符
+			for (k,v) in htmlCharacterMap.items():
 				content = re.sub(re.compile(k), v, content)
 			authorname = item[0].strip() 
 			for (k,v) in htmlCharacterMap.items():
 				authorname = re.sub(re.compile(k), v, authorname)
+			#找出评论个数，没有为0
+			pattern = re.compile(r'.*?<a href="/article/(?P<id>.*?)".*?<i class="number">(?P<number>.*?)</i>.*?', re.S)
+			result = re.match(pattern, item[4])
+			commentnumbers = 0
+			articleId = ''
+			if result:
+				commentnumbers = result.groupdict().get('number', '0')
+				articleId = result.groupdict().get('id', '')
 			self.stories.append(authorname + 
-			'(' + item[3].strip() + u'好笑·' + str(item[5]) + u'评论)' + 
+			'(' + item[3].strip() + u'好笑·' + str(commentnumbers) + u'评论)'
+			 + 
 			'\n' + content + '\n')
-			self.stories.append(item[4])
+			self.stories.append(articleId)
 
 	def getNextComment(self):
 		print self.comments[0]
@@ -155,6 +166,10 @@ class QSBK(object):
 			self.getNextPage()
 
 	def start(self):
+		#先删除临时保存的网页
+		tempfiles = [x for x in os.listdir('.') if os.path.isfile(x) and os.path.splitext(x)[1]=='.html' and x.startswith('temp')]
+		for file in tempfiles:
+			os.remove(file)
 		print u"正在读取糗事百科，按回车查看下一个糗事，按C查看当前这个糗事的评论，按Q退出或返回"
 		self.enable = True
 		self.getNextPage()
@@ -171,7 +186,7 @@ class QSBK(object):
 				if len(self.currentStoryId)>0:
 					self.getCurrentStoryComments(self.currentStoryId)
 				else:
-					print '请先查看糗事再看评论。'
+					print '这条糗事没有评论'
 			else:
 				if not self.viewComment:
 					self.getOneStory()
