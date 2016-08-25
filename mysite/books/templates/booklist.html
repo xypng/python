@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+</head>
+<body>
+<p>You search for: <strong>{{ query }}</strong></p>
+{% if book_list %}
+<p>Found {{ book_list|length }} book{{ book_list|pluralize }}</p>
+<ul>
+    {% for book in book_list reversed %}
+    <li>{{ book.title }}, {{ book.Publisher.name }}, {{ book.publication_date }}</li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No books matched your search criteria </p>
+{% endif %}
+</body>
+</html>
