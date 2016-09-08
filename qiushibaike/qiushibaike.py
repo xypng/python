@@ -15,7 +15,7 @@ htmlCharacterMap = {
 	'&gt;' : '>',
 	'&lt;' : '<',
 	'&amp;': '&',
-	'&#39':"'",
+	'&#39;':"'",
 }
 
 class QSBK(object):
@@ -81,7 +81,7 @@ class QSBK(object):
 			return None
 		self.getPageTotal(pageContent)
 		pattrenStr = r'<h2>(?P<authorname>.*?)</h2>.*?'\
-						r'<div class="content">(?P<content>.*?)</div>'\
+						r'<div class="content">\s*<span>(?P<content>.*?)</span>\s*</div>'\
 						r'(?P<maybehaveimage>.*?)'\
 						r'<i class="number">(?P<numbervote>.*?)</i>.*?'\
 						r'<span class="stats-comments">(?P<comments>.*?)</div>'
@@ -108,6 +108,7 @@ class QSBK(object):
 			for (k,v) in htmlCharacterMap.items():
 				re.sub(re.compile(k), v, comentstr)
 			self.comments.append(comentstr)
+		self.comments.reverse()
 		if len(self.comments)>0:
 			print '已切换到查看评论，换回车显示下一个评论,按Q退出回到查看糗事'
 		else:
