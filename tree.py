@@ -3,13 +3,13 @@
 
 __author__ = 'xiaoyipeng'
 
-import os
+import os, sys
 
 def treePath(path, level=0):
     fileNames = os.listdir(path)
     for name in fileNames:
         #忽略.和$开头的文件或文件夹
-        if name.startswith('.') or name.startswith('$'):
+        if name.startswith('.') or name.startswith('$') or name.startswith('~'):
             continue
 
         #得到路径
@@ -22,4 +22,8 @@ def treePath(path, level=0):
             treePath(abspath, level+1)
 
 if __name__ == '__main__':
-    treePath(os.getcwd())
+    #如果没有传入指定目录就打印当前目录，如果传入了就打印指定目录的
+    if len(sys.argv)==1:
+        treePath(os.getcwd())
+    elif len(sys.argv)>1:
+        treePath(sys.argv[1])
