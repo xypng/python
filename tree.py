@@ -5,7 +5,7 @@ __author__ = 'xiaoyipeng'
 
 import os
 
-def treePath(path, level):
+def treePath(path, level=0):
     fileNames = os.listdir(path)
     for name in fileNames:
         #忽略.和$开头的文件或文件夹
@@ -16,10 +16,10 @@ def treePath(path, level):
         abspath = os.path.join(path, name)
 
         #打印文件名，前面加上层级关系的字符串
-        print ''.join(['|  ']*level) + '|--' + name
+        print '|  ' * level + '|--' + name
 
         if os.path.isdir(abspath):
             treePath(abspath, level+1)
 
 if __name__ == '__main__':
-    treePath(os.getcwd(), 0)
+    treePath(os.getcwd())
