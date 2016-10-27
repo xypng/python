@@ -58,6 +58,9 @@ currentPrint = 0
 sumDirectorys = 0
 #统计文件个数
 sumfiles = 0
+#每个文件夹最后多输一个空行（为了好看）
+#但是有可能多个空行连着，以这个做为标记已经输出过了
+hasBlankLine = False
 
 def printHelp(*args):
     '''打印帮助'''
@@ -172,7 +175,8 @@ def treePath(path, level=0):
     #反序
     if reverse:
         fileNames.sort(reverse = True)
-    for name in fileNames:
+    last = len(fileNames)-1
+    for (index, name) in enumerate(fileNames):
         #根据showAll忽略.和$开头的文件或文件夹
         if not showAll and (name.startswith('.') or name.startswith('$') or name.startswith('~')):
             continue
@@ -182,6 +186,8 @@ def treePath(path, level=0):
 
         #打印文件名，前面加上层级关系的字符串
         print '|  ' * level + '|--' + name
+        global hasBlankLine
+        hasBlankLine = False
         global currentPrint
         currentPrint+=1
         #开启了翻页
@@ -196,6 +202,10 @@ def treePath(path, level=0):
         else:
             global sumfiles
             sumfiles += 1
+
+        if index == last and not hasBlankLine:
+            print '|  ' * level
+            hasBlankLine = True
 
 def main():
     #path是要打印的目录，rang是用户输入参数所在的范围
@@ -227,13 +237,13 @@ def main():
     for arg in args:
         conformOptions(*arg)
 
-    print '.'
+    print path
     # 检查路径是否存在, 如果不存在提示错误，并退出
     checkPath(path)
     # 开始打印
     treePath(path)
     # 打印统计文件和文件夹个数
-    print '\n', sumDirectorys, '个文件夹, ', sumfiles, '个文件。\n'
+    print sumDirectorys, '个文件夹, ', sumfiles, '个文件。\n'
 
 if __name__ == '__main__':
     main()
