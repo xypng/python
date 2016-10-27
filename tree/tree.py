@@ -89,11 +89,9 @@ def setSize(*args):
     global size
     if len(args)==1 and args[0].isdigit():
         size = int(args[0])
-        print 'size:', size, isinstance(size, int)
     elif len(args)==0:
         #如果size不带参数，默认10
         size = 10
-        print 'size:', size, isinstance(size, int)
     else:
         print 'size参数不正确!'
         exit()
@@ -103,7 +101,6 @@ def setLevel(*args):
     if len(args)==1 and args[0].isdigit():
         global maxLevel
         maxLevel = int(args[0])
-        print 'level:', maxLevel, isinstance(maxLevel, int)
     else:
         print 'level参数不正确!'
         exit()
@@ -127,26 +124,25 @@ def conformOptions(option, *args):
     if options.has_key(option):
         options[option](*args)
     else:
-        print '输入参数错误！'
+        print '不存在' + option + '这个选项！'
         exit()
 
 def checkPath(path):
     '''检查路径是否存在, 如果不存在提示错误，并退出'''
-    if os.path.exists(path):
+    if os.path.isdir(path):
         return
     else:
-        print '请检查路径是否正确！'
+        print path + '不是一个目录！'
         exit()
 
 def waitInput():
+    '''等待用户输入q退出，或回车继续'''
     while True:
         answer = getch()
         if answer == 'q' or answer == 'Q':
             exit()
         elif answer == '\r':
             break
-        else:
-            pass
 
 def treePath(path, level=0):
     '''递归打印文件或文件夹'''
@@ -166,6 +162,7 @@ def treePath(path, level=0):
         print '|  ' * level + '|--' + name
         global currentPrint
         currentPrint+=1
+        #开启了翻页
         if size!=0 and currentPrint%size==0:
             #等待用户输入enter
             waitInput()
@@ -201,7 +198,6 @@ if __name__ == '__main__':
             args.append(arg)
 
     for arg in args:
-        print arg
         conformOptions(*arg)
 
     # 检查路径是否存在, 如果不存在提示错误，并退出
