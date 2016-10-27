@@ -52,6 +52,10 @@ maxLevel = 0
 size = 0
 #现在已经输出了多少行，在分页显示时使用
 currentPrint = 0
+#统计文件夹个数
+sumDirectorys = 0
+#统计文件个数
+sumfiles = 0
 
 def printHelp(*args):
     '''打印帮助'''
@@ -140,6 +144,7 @@ def waitInput():
     while True:
         answer = getch()
         if answer == 'q' or answer == 'Q':
+            print '\n', sumDirectorys, '个文件夹, ', sumfiles, '个文件。\n'
             exit()
         elif answer == '\r':
             break
@@ -168,7 +173,12 @@ def treePath(path, level=0):
             waitInput()
 
         if os.path.isdir(abspath):
+            global sumDirectorys
+            sumDirectorys += 1
             treePath(abspath, level+1)
+        else:
+            global sumfiles
+            sumfiles += 1
 
 if __name__ == '__main__':
     #path是要打印的目录，range是用户输入参数所在的范围
@@ -200,7 +210,10 @@ if __name__ == '__main__':
     for arg in args:
         conformOptions(*arg)
 
+    print '.'
     # 检查路径是否存在, 如果不存在提示错误，并退出
     checkPath(path)
     # 开始打印
     treePath(path)
+    # 打印统计文件和文件夹个数
+    print '\n', sumDirectorys, '个文件夹, ', sumfiles, '个文件。\n'
