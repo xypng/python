@@ -3,6 +3,43 @@
 
 __author__ = 'xiaoyipeng'
 
+#下面_Getch代码来源：
+#http://code.activestate.com/recipes/134892/
+class _Getch:
+    """Gets a single character from standard input.  Does not echo to the screen."""
+    def __init__(self):
+        try:
+            self.impl = _GetchWindows()
+        except ImportError, err:
+            self.impl = _GetchUnix()
+
+    def __call__(self): return self.impl()
+
+class _GetchUnix:
+    def __init__(self):
+        import tty, sys
+
+    def __call__(self):
+        import sys, tty, termios
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
+class _GetchWindows:
+    def __init__(self):
+        import msvcrt
+
+    def __call__(self):
+        import msvcrt
+        return msvcrt.getch()
+
+getch = _Getch()
+
 import os, sys
 
 #版本号
@@ -13,6 +50,8 @@ showAll = False
 maxLevel = 0
 #翻页显示模式下每页显示的行数，默认不开启翻页模式
 size = 0
+#现在已经输出了多少行，在分页显示时使用
+currentPrint = 0
 
 def printHelp(*args):
     '''打印帮助'''
@@ -99,6 +138,16 @@ def checkPath(path):
         print '请检查路径是否正确！'
         exit()
 
+def waitInput():
+    while True:
+        answer = getch()
+        if answer == 'q' or answer == 'Q':
+            exit()
+        elif answer == '\r':
+            break
+        else:
+            pass
+
 def treePath(path, level=0):
     '''递归打印文件或文件夹'''
     #如果限制了最多输出的层级并且已经达到了限制，则返回
@@ -115,6 +164,11 @@ def treePath(path, level=0):
 
         #打印文件名，前面加上层级关系的字符串
         print '|  ' * level + '|--' + name
+        global currentPrint
+        currentPrint+=1
+        if size!=0 and currentPrint%size==0:
+            #等待用户输入enter
+            waitInput()
 
         if os.path.isdir(abspath):
             treePath(abspath, level+1)
