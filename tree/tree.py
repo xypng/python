@@ -46,6 +46,8 @@ import os, sys
 version = '1.0.0'
 #是否显示所有文件或文件夹，默认不显示
 showAll = False
+#是否反序输出结果, 默认正序
+reverse = False
 #目录显示的最多层级，默认显示所有
 maxLevel = 0
 #翻页显示模式下每页显示的行数，默认不开启翻页模式
@@ -68,7 +70,8 @@ def printHelp(*args):
         -h/--help    : 显示帮助
         -a/--all     : 显示所有文件或文件夹(包括影藏的和临时的)， 默认不显示
         -s/--size    : 开启翻页显示，参数表示每页显示的行数，默认10行
-        -l/--level   : 参数表示最多显示的目录层级，默认显示到最后一级'''
+        -l/--level   : 参数表示最多显示的目录层级，默认显示到最后一级
+        -r/--reverse : 按文件名反序输出结果，默认正序'''
     exit()
 
 def printVersion(*args):
@@ -87,6 +90,15 @@ def setShowAll(*args):
     else:
         global showAll
         showAll = True
+
+def setReverse(*args):
+    '''设置是否反序输出结果'''
+    if len(args)>0:
+        print 'reverse不能带参数!'
+        exit()
+    else:
+        global reverse
+        reverse = True
 
 def setSize(*args):
     '''设置一行显示几页'''
@@ -121,6 +133,8 @@ options = {
     '-s'       : setSize,
     '--level'  : setLevel,
     '-l'       : setLevel,
+    '--reverse': setReverse,
+    '-r'       : setReverse,
 }
 
 def conformOptions(option, *args):
@@ -155,6 +169,9 @@ def treePath(path, level=0):
     if maxLevel!=0 and level>=maxLevel:
         return
     fileNames = os.listdir(path)
+    #反序
+    if reverse:
+        fileNames.sort(reverse = True)
     for name in fileNames:
         #根据showAll忽略.和$开头的文件或文件夹
         if not showAll and (name.startswith('.') or name.startswith('$') or name.startswith('~')):
