@@ -166,7 +166,7 @@ def waitInput():
         elif answer == '\r':
             break
 
-def treePath(path, level=0):
+def treePath(path, levelstr='', level=0):
     '''递归打印文件或文件夹'''
     #如果限制了最多输出的层级并且已经达到了限制，则返回
     if maxLevel!=0 and level>=maxLevel:
@@ -185,7 +185,7 @@ def treePath(path, level=0):
         abspath = os.path.join(path, name)
 
         #打印文件名，前面加上层级关系的字符串
-        print '|  ' * level + '|--' + name
+        print levelstr + '|--' + name
         global hasBlankLine
         hasBlankLine = False
         global currentPrint
@@ -198,13 +198,16 @@ def treePath(path, level=0):
         if os.path.isdir(abspath):
             global sumDirectorys
             sumDirectorys += 1
-            treePath(abspath, level+1)
+            if index == last:
+                treePath(abspath, levelstr+'   ', level+1)
+            else:
+                treePath(abspath, levelstr+'|  ', level+1)
         else:
             global sumfiles
             sumfiles += 1
 
         if index == last and not hasBlankLine:
-            print '|  ' * level
+            print levelstr
             hasBlankLine = True
 
 def main():
