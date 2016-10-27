@@ -23,11 +23,13 @@ class _GetchUnix:
         import sys, tty, termios
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
+        sys.stdout.write('回车继续，按‘q’退出')
         try:
             tty.setraw(sys.stdin.fileno())
             ch = sys.stdin.read(1)
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        sys.stdout.write('\b'*19)
         return ch
 
 class _GetchWindows:
@@ -72,7 +74,7 @@ def printHelp(*args):
         -v/--version : 显示程序的版本号
         -h/--help    : 显示帮助
         -a/--all     : 显示所有文件或文件夹(包括影藏的和临时的)， 默认不显示
-        -s/--size    : 开启翻页显示，参数表示每页显示的行数，默认10行
+        -s/--size    : 开启翻页显示（按'q'退出，按'enter'继续），参数表示每页显示的行数，默认10行
         -l/--level   : 参数表示最多显示的目录层级，默认显示到最后一级
         -r/--reverse : 按文件名反序输出结果，默认正序'''
     exit()
@@ -161,7 +163,7 @@ def waitInput():
     while True:
         answer = getch()
         if answer == 'q' or answer == 'Q':
-            print '\n', sumDirectorys, '个文件夹, ', sumfiles, '个文件。\n'
+            print '\b'*18+' '*18+'\n', sumDirectorys, '个文件夹, ', sumfiles, '个文件。\n'
             exit()
         elif answer == '\r':
             break
@@ -185,7 +187,8 @@ def treePath(path, levelstr='', level=0):
         abspath = os.path.join(path, name)
 
         #打印文件名，前面加上层级关系的字符串
-        print levelstr + '|--' + name
+        printstring = levelstr + '|--' + name
+        print printstring + ' '*(18 - len(printstring))
         global hasBlankLine
         hasBlankLine = False
         global currentPrint
@@ -207,7 +210,7 @@ def treePath(path, levelstr='', level=0):
             sumfiles += 1
 
         if index == last and not hasBlankLine:
-            print levelstr
+            print levelstr + ' '*(18-len(levelstr))
             hasBlankLine = True
 
 def main():
