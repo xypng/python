@@ -197,21 +197,21 @@ def treePath(path, level=0):
             global sumfiles
             sumfiles += 1
 
-if __name__ == '__main__':
-    #path是要打印的目录，range是用户输入参数所在的范围
+def main():
+    #path是要打印的目录，rang是用户输入参数所在的范围
     if len(sys.argv)==1:
         path = os.getcwd()
-        range = []
+        rang = []
     #如果指定了目录，必须在最后一个，最后一个也有可能是参数(参数是-开头或者是数字)
     elif not ( sys.argv[len(sys.argv)-1].startswith('-') or sys.argv[len(sys.argv)-1].isdigit() ):
         path = sys.argv[len(sys.argv)-1]
-        range = range(1, len(sys.argv)-1)
+        rang = range(1, len(sys.argv)-1)
     else:
         path = os.getcwd()
-        range = range(1, len(sys.argv))
+        rang = range(1, len(sys.argv))
     args = []
     #处理用户输入的参数, args是最后得到用户输入选项和参数的数组
-    for x in range:
+    for x in rang:
         option = sys.argv[x]
         #这是个数，直接跳过
         if option.isdigit():
@@ -219,7 +219,7 @@ if __name__ == '__main__':
         else:
             arg = [option]
             i = x+1
-            while i <= range[len(range)-1] and sys.argv[i].isdigit():
+            while i <= rang[len(rang)-1] and sys.argv[i].isdigit():
                 arg.append(sys.argv[i])
                 i+=1
             args.append(arg)
@@ -234,3 +234,6 @@ if __name__ == '__main__':
     treePath(path)
     # 打印统计文件和文件夹个数
     print '\n', sumDirectorys, '个文件夹, ', sumfiles, '个文件。\n'
+
+if __name__ == '__main__':
+    main()
