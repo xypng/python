@@ -23,13 +23,13 @@ class _GetchUnix:
         import sys, tty, termios
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
-        sys.stdout.write('回车继续，按‘q’退出')
+        sys.stdout.write('按\'enter\'翻下一页，按‘q’退出')
         try:
             tty.setraw(sys.stdin.fileno())
             ch = sys.stdin.read(1)
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        sys.stdout.write('\b'*19)
+        sys.stdout.write('\b'*29)
         return ch
 
 class _GetchWindows:
@@ -163,7 +163,7 @@ def waitInput():
     while True:
         answer = getch()
         if answer == 'q' or answer == 'Q':
-            print '\b'*18+' '*18+'\n', sumDirectorys, '个文件夹, ', sumfiles, '个文件。\n'
+            print '\b'*28+' '*28+'\n', sumDirectorys, '个文件夹, ', sumfiles, '个文件。\n'
             exit()
         elif answer == '\r':
             break
@@ -188,7 +188,7 @@ def treePath(path, levelstr='', level=0):
 
         #打印文件名，前面加上层级关系的字符串
         printstring = levelstr + '|--' + name
-        print printstring + ' '*(18 - len(printstring))
+        print printstring + ' '*(28 - len(printstring))
         global hasBlankLine
         hasBlankLine = False
         global currentPrint
@@ -210,7 +210,7 @@ def treePath(path, levelstr='', level=0):
             sumfiles += 1
 
         if index == last and not hasBlankLine:
-            print levelstr + ' '*(18-len(levelstr))
+            print levelstr + ' '*(28-len(levelstr))
             hasBlankLine = True
 
 def main():
