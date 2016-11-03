@@ -54,6 +54,8 @@ reverse = False
 maxLevel = 0
 #翻页显示模式下每页显示的行数，默认不开启翻页模式
 size = 0
+#排序方式，默认是按名字排序
+sortMethod = None
 #现在已经输出了多少行，在分页显示时使用
 currentPrint = 0
 #统计文件夹个数
@@ -61,7 +63,7 @@ sumDirectorys = 0
 #统计文件个数
 sumfiles = 0
 #每个文件夹最后多输一个空行（为了好看）
-#但是有可能多个空行连着，以这个做为标记已经输出过了
+#但是有可能多个空行连着，以这个做为标记已经输出过了(连着的空行不重复输出)
 hasBlankLine = False
 
 def printHelp(*args):
@@ -70,13 +72,20 @@ def printHelp(*args):
         print 'help不能带参数！'
     else:
         print '''这个程序可以打印目录的树形结构, 如果不指定目录则打印当前目录
-    选项包括:
-        -v/--version : 显示程序的版本号
-        -h/--help    : 显示帮助
-        -a/--all     : 显示所有文件或文件夹(包括影藏的和临时的)， 默认不显示
-        -s/--size    : 开启翻页显示（按'q'退出，按'enter'继续），参数表示每页显示的行数，默认10行
-        -l/--level   : 参数表示最多显示的目录层级，默认显示到最后一级
-        -r/--reverse : 按文件名反序输出结果，默认正序'''
+
+tree --选项/-选项 [参数] --选项/-选项 [参数] [目录]
+
+选项包括:
+    -v/--version   : 显示程序的版本号
+    -h/--help      : 显示帮助
+    -a/--all       : 显示所有文件或文件夹(包括影藏的和临时的)， 默认不显示
+    -s/--size      : 开启翻页显示（按'q'退出，按'enter'继续），参数表示每页显示的行数，默认10行
+    -l/--level     : 参数表示最多显示的目录层级，默认显示到最后一级
+    -r/--reverse   : 按当前排序方式反序输出结果，默认正序，默认的排序方式是文件名排序
+    -at/--atime    : 按最后访问时间排序
+    -ct/--ctime    : 按创建时间排序
+    -mt/--mtime    : 按最后修改时间排序
+    -fs/--filesize : 按文件大小排序'''
     exit()
 
 def printVersion(*args):
@@ -126,20 +135,76 @@ def setLevel(*args):
         print 'level参数不正确!'
         exit()
 
+def setATime(*args):
+    '''设置按最后访问时间排序'''
+    global sortMethod
+    if len(args)>0:
+        print 'atime不能带参数!'
+        exit()
+    elif sortMethod is not None:
+        print '只能按一种方式排序'
+        exit()
+    else:
+        sortMethod = os.path.getatime
+
+def setCTime(*args):
+    '''设置按最后访问时间排序'''
+    global sortMethod
+    if len(args)>0:
+        print 'ctime不能带参数!'
+        exit()
+    elif sortMethod is not None:
+        print '只能按一种方式排序'
+        exit()
+    else:
+        sortMethod = os.path.getctime
+
+def setMTime(*args):
+    '''设置按最后访问时间排序'''
+    global sortMethod
+    if len(args)>0:
+        print 'mtime不能带参数!'
+        exit()
+    elif sortMethod is not None:
+        print '只能按一种方式排序'
+        exit()
+    else:
+        sortMethod = os.path.getmtime
+
+def setFileSize(*args):
+    '''设置按文件大小排序'''
+    global sortMethod
+    if len(args)>0:
+        print 'filesize不能带参数!'
+        exit()
+    elif sortMethod is not None:
+        print '只能按一种方式排序'
+        exit()
+    else:
+        sortMethod = os.path.getsize
+
 #option对应调的方法名
 options = {
-    '--version': printVersion,
-    '-v'       : printVersion,
-    '--help'   : printHelp,
-    '-h'       : printHelp,
-    '--all'    : setShowAll,
-    '-a'       : setShowAll,
-    '--size'   : setSize,
-    '-s'       : setSize,
-    '--level'  : setLevel,
-    '-l'       : setLevel,
-    '--reverse': setReverse,
-    '-r'       : setReverse,
+    '--version'  : printVersion,
+    '-v'         : printVersion,
+    '--help'     : printHelp,
+    '-h'         : printHelp,
+    '--all'      : setShowAll,
+    '-a'         : setShowAll,
+    '--size'     : setSize,
+    '-s'         : setSize,
+    '--level'    : setLevel,
+    '-l'         : setLevel,
+    '--reverse'  : setReverse,
+    '-r'         : setReverse,
+    '--atime'    : setATime,
+    '-at'        : setATime,
+    '--ctime'    : setCTime,
+    '-ct'        : setCTime,
+    '--mtime'    : setMTime,
+    '-mt'        : setMTime,
+    '--filesize' : setFileSize,
+    '-fs'        : setFileSize,
 }
 
 def conformOptions(option, *args):
@@ -168,13 +233,28 @@ def waitInput():
         elif answer == '\r':
             break
 
+def sortFileName(path, fileNames):
+    #如果没有设置排序方式就按文件名排序
+    if sortMethod is None:
+        return fileNames
+    #比较用的方法
+    def compareMethod(x, y):
+        if sortMethod(os.path.join(path, x)) < sortMethod(os.path.join(path, y)):
+            return -1
+        else:
+            return 1
+
+    return sorted(fileNames, compareMethod)
+
 def treePath(path, levelstr='', level=0):
     '''递归打印文件或文件夹'''
     #如果限制了最多输出的层级并且已经达到了限制，则返回
     if maxLevel!=0 and level>=maxLevel:
         return
     fileNames = os.listdir(path)
-    #反序
+    #排序方式
+    fileNames = sortFileName(path, fileNames)
+    #是否反序
     if reverse:
         fileNames.sort(reverse = True)
     last = len(fileNames)-1
@@ -188,6 +268,7 @@ def treePath(path, levelstr='', level=0):
 
         #打印文件名，前面加上层级关系的字符串
         printstring = levelstr + '|--' + name
+        #因为是用退格的方式清掉翻下一页的提示，所以要用多一些空格覆盖原来的地方
         print printstring + ' '*(28 - len(printstring))
         global hasBlankLine
         hasBlankLine = False
@@ -213,8 +294,9 @@ def treePath(path, levelstr='', level=0):
             print levelstr + ' '*(28-len(levelstr))
             hasBlankLine = True
 
-def main():
-    #path是要打印的目录，rang是用户输入参数所在的范围
+def getUserInput():
+    '''得到用户的输入'''
+    #path是要打印的目录，rang是用户输入选项参数所在的范围
     if len(sys.argv)==1:
         path = os.getcwd()
         rang = []
@@ -239,10 +321,13 @@ def main():
                 arg.append(sys.argv[i])
                 i+=1
             args.append(arg)
+    return args, path
 
+if __name__ == '__main__':
+    #args是用户输入的选项和参数，path是目录
+    args, path = getUserInput()
     for arg in args:
         conformOptions(*arg)
-
     print path
     # 检查路径是否存在, 如果不存在提示错误，并退出
     checkPath(path)
@@ -250,6 +335,3 @@ def main():
     treePath(path)
     # 打印统计文件和文件夹个数
     print sumDirectorys, '个文件夹, ', sumfiles, '个文件。\n'
-
-if __name__ == '__main__':
-    main()
